@@ -26,7 +26,7 @@
   }
   h1 {
     position: fixed; z-index: 1; left: 0; right: 0;
-    top: max(14px, env(safe-area-inset-top));
+    top: max(44px, calc(env(safe-area-inset-top) + 36px));
     margin: 0; padding: 0 56px;
     text-align: center;
     font-weight: 750;
@@ -59,9 +59,10 @@
   }
   .other:hover, .other:focus-visible { color: var(--ink); text-decoration: underline; }
 </style>
+<style>.pv{display:flex;gap:4px;justify-content:center;font:12px/1 system-ui,sans-serif}.pv a{padding:5px 10px;border-radius:999px;color:#94a3b8;text-decoration:none;background:rgba(15,23,42,.75);border:1px solid #1e293b}.pv a:hover{color:#e2e8f0}.pv a[aria-current]{color:#042f2e;background:#2dd4bf;border-color:#2dd4bf;font-weight:700}</style>
 </head>
 <body>
-<a class="other" href="/">other pelican</a>
+<nav class="pv" style="position:fixed;z-index:3;left:0;right:0;top:max(8px,env(safe-area-inset-top))"><a href="index.html">原版</a><a href="opus.html" aria-current="page">Opus</a><a href="opus55.html">Opus 5.5 ✨</a></nav>
 <h1>Pelican on a Bicycle</h1>
 
 <svg id="scene" viewBox="110 -10 580 490" preserveAspectRatio="xMidYMid meet" role="img" aria-label="A white pelican with a big orange pouch bill pedaling a red bicycle along a country road">
