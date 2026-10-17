@@ -1,0 +1,671 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>鹈鹕海滨巡航 - The Seaside Pelican</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    /* 鹈鹕标志性大喉囊随海风颤动 */
+    @keyframes pouchFlutter {
+      0%, 100% { transform: scale(1) rotate(0deg); }
+      50% { transform: scale(1.04, 0.96) rotate(-2deg); }
+    }
+    .wobble-pouch {
+      transform-origin: 325px 145px;
+      animation: pouchFlutter 0.38s ease-in-out infinite;
+    }
+  </style>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col items-center justify-center p-3 select-none">
+
+  <!-- 顶部标题与控制栏 -->
+  <div class="w-full max-w-4xl flex flex-wrap items-center justify-between gap-3 mb-3">
+    <div>
+      <span class="text-xs px-2.5 py-0.5 rounded-full bg-teal-500/10 border border-teal-500/30 text-teal-400 font-bold">
+        Beach Edition · 海滨漫游记
+      </span>
+      <h1 class="text-xl sm:text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-teal-400 via-amber-300 to-orange-400">
+        🏝️ 鹈鹕沙滩巡洋记 (Pelican on the Beach)
+      </h1>
+    </div>
+
+    <!-- 4档海滨氛围切换 -->
+    <div class="flex items-center bg-slate-900 border border-slate-700/80 p-1.5 rounded-2xl gap-1 shadow-lg">
+      <button onclick="setMode('sunny')" id="btn-sunny" class="mode-btn px-3 py-1 rounded-xl text-xs font-bold transition bg-teal-500 text-slate-950">
+        ☀️ 阳光沙滩
+      </button>
+      <button onclick="setMode('sunset')" id="btn-sunset" class="mode-btn px-3 py-1 rounded-xl text-xs font-bold transition text-slate-400 hover:text-white">
+        🌅 椰林日落
+      </button>
+      <button onclick="setMode('rain')" id="btn-rain" class="mode-btn px-3 py-1 rounded-xl text-xs font-bold transition text-slate-400 hover:text-white">
+        🥥 热带雷雨
+      </button>
+      <button onclick="setMode('night')" id="btn-night" class="mode-btn px-3 py-1 rounded-xl text-xs font-bold transition text-slate-400 hover:text-white">
+        🌌 荧光海夜
+      </button>
+    </div>
+  </div>
+
+  <!-- SVG 主视口容器 -->
+  <div class="relative w-full max-w-4xl aspect-[16/10] rounded-3xl overflow-hidden shadow-2xl border-4 border-slate-800">
+    <svg id="stage" class="w-full h-full" viewBox="0 0 800 500" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <!-- 天空背景渐变 -->
+        <linearGradient id="skyGrad" x1="0" y1="0" x2="0" y2="1">
+          <stop id="sky-1" offset="0%" stop-color="#38bdf8"/>
+          <stop id="sky-2" offset="100%" stop-color="#bae6fd"/>
+        </linearGradient>
+
+        <!-- 海水渐变 -->
+        <linearGradient id="seaGrad" x1="0" y1="0" x2="0" y2="1">
+          <stop id="sea-1" offset="0%" stop-color="#0284c7"/>
+          <stop id="sea-2" offset="100%" stop-color="#0e7490"/>
+        </linearGradient>
+
+        <!-- 沙滩与木栈道渐变 -->
+        <linearGradient id="sandGrad" x1="0" y1="0" x2="0" y2="1">
+          <stop id="sand-1" offset="0%" stop-color="#fde047"/>
+          <stop id="sand-2" offset="100%" stop-color="#eab308"/>
+        </linearGradient>
+
+        <!-- 复古沙滩巡洋车马卡龙绿车架 -->
+        <linearGradient id="cruiserFrame" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0%" stop-color="#2dd4bf"/>
+          <stop offset="100%" stop-color="#0f766e"/>
+        </linearGradient>
+
+        <!-- 车灯照射渐变 -->
+        <linearGradient id="lightBeamGrad" x1="0" y1="0" x2="1" y2="0">
+          <stop offset="0%" stop-color="#fef08a" stop-opacity="0.85"/>
+          <stop offset="60%" stop-color="#fde047" stop-opacity="0.2"/>
+          <stop offset="100%" stop-color="#fde047" stop-opacity="0"/>
+        </linearGradient>
+
+        <!-- 鹈鹕嘴部渐变 -->
+        <linearGradient id="pouchGrad" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#fde047"/>
+          <stop offset="60%" stop-color="#fb923c"/>
+          <stop offset="100%" stop-color="#ea580c"/>
+        </linearGradient>
+        <linearGradient id="beakGrad" x1="0" y1="0" x2="1" y2="0">
+          <stop offset="0%" stop-color="#f59e0b"/>
+          <stop offset="100%" stop-color="#d97706"/>
+        </linearGradient>
+      </defs>
+
+      <!-- 1. 天空与太阳 -->
+      <rect id="sky-rect" width="800" height="500" fill="url(#skyGrad)"/>
+      <circle id="sun-orb" cx="640" cy="120" r="48" fill="#fef08a" opacity="0.95"/>
+
+      <!-- 暴雨闪电覆层 -->
+      <rect id="lightning-overlay" width="800" height="500" fill="#ffffff" opacity="0" pointer-events="none"/>
+
+      <!-- 2. 远景：远海云朵与海鸥 -->
+      <g id="cloud-layer" opacity="0.75">
+        <path d="M 50 80 Q 75 55 105 75 Q 130 50 165 70 Q 200 60 215 80 Z" fill="#ffffff"/>
+        <path d="M 400 110 Q 430 85 465 105 Q 495 80 535 100 Q 565 90 585 110 Z" fill="#ffffff"/>
+      </g>
+      <!-- 翱翔海鸥两只 -->
+      <g stroke="#ffffff" stroke-width="2.5" fill="none" stroke-linecap="round" opacity="0.85">
+        <path d="M 220 130 Q 230 120 240 130 Q 250 120 260 130"/>
+        <path d="M 280 145 Q 288 137 296 145 Q 304 137 312 145"/>
+      </g>
+
+      <!-- 3. 远方热带小岛 🏝️ 与帆船 -->
+      <g id="distant-islands">
+        <!-- 远方小岛 -->
+        <ellipse cx="140" cy="270" rx="90" ry="14" fill="#0284c7" opacity="0.5"/>
+        <path d="M 120 268 Q 130 235 145 220" stroke="#047857" stroke-width="4" fill="none"/>
+        <circle cx="145" cy="220" r="14" fill="#059669"/>
+        <!-- 远方帆船 -->
+        <polygon points="680,250 695,225 695,250" fill="#ffffff"/>
+        <polygon points="698,250 710,232 698,232" fill="#e2e8f0"/>
+        <line x1="675" y1="252" x2="715" y2="252" stroke="#334155" stroke-width="3" stroke-linecap="round"/>
+      </g>
+
+      <!-- 4. 动态波浪海面 (Y: 260 ~ 380) -->
+      <rect x="0" y="260" width="800" height="120" fill="url(#seaGrad)"/>
+      <path id="wave-back" fill="#38bdf8" opacity="0.35" d=""></path>
+      <path id="wave-front" fill="#0284c7" opacity="0.45" d=""></path>
+      <!-- 海浪白沫海岸线 -->
+      <path id="surf-foam" stroke="#ffffff" stroke-width="4" fill="none" opacity="0.8" stroke-dasharray="12 8" d=""></path>
+
+      <!-- 5. 移速椰子树 (中景视差，向后掠过) -->
+      <g id="palm-trees-layer"></g>
+
+      <!-- 6. 海滨金沙滩与木栈道 (Y: 375 ~ 500) -->
+      <rect id="sand-base" x="0" y="375" width="800" height="125" fill="url(#sandGrad)"/>
+      <!-- 木栈道结构 -->
+      <rect x="0" y="415" width="800" height="85" fill="#78350f" opacity="0.15"/>
+      <line x1="0" y1="415" x2="800" y2="415" stroke="#92400e" stroke-width="4"/>
+      <line x1="0" y1="495" x2="800" y2="495" stroke="#92400e" stroke-width="4"/>
+      <!-- 木栈道拼板缝隙组 -->
+      <g id="boardwalk-planks" stroke="#78350f" stroke-width="3"></g>
+
+      <!-- 车轮阴影 -->
+      <ellipse cx="300" cy="410" rx="55" ry="9" fill="#451a03" opacity="0.35"/>
+      <ellipse cx="540" cy="410" rx="55" ry="9" fill="#451a03" opacity="0.35"/>
+
+      <!-- 飞溅沙粒与浪花粒子容器 -->
+      <g id="sand-spray"></g>
+
+      <!-- ================= 7. 鹈鹕与沙滩巡洋车总成 ================= -->
+      <g id="bike-pelican-rig">
+        
+        <!-- 后轮组 (300, 350) -->
+        <g id="back-wheel-assembly">
+          <circle cx="300" cy="350" r="54" fill="none" stroke="#f1f5f9" stroke-width="10"/> <!-- 复古白边胎 -->
+          <circle cx="300" cy="350" r="48" fill="none" stroke="#334155" stroke-width="2.5"/>
+          <g id="back-spokes" stroke="#cbd5e1" stroke-width="1.8"></g>
+          <circle cx="300" cy="350" r="8" fill="#0f766e"/>
+        </g>
+
+        <!-- 前轮组 (540, 350) -->
+        <g id="front-wheel-assembly">
+          <circle cx="540" cy="350" r="54" fill="none" stroke="#f1f5f9" stroke-width="10"/>
+          <circle cx="540" cy="350" r="48" fill="none" stroke="#334155" stroke-width="2.5"/>
+          <g id="front-spokes" stroke="#cbd5e1" stroke-width="1.8"></g>
+          <circle cx="540" cy="350" r="8" fill="#0f766e"/>
+        </g>
+
+        <!-- 沙滩巡洋车车架 (弧形复古主梁) -->
+        <g stroke="url(#cruiserFrame)" stroke-width="8" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="300" y1="350" x2="400" y2="350"/>
+          <line x1="300" y1="350" x2="375" y2="260"/>
+          <line x1="400" y1="350" x2="375" y2="260"/>
+          <!-- 经典巡洋车双弧形上管 -->
+          <path d="M 375 260 Q 430 250 515 230" fill="none"/>
+          <path d="M 380 275 Q 445 270 515 245" fill="none" stroke-width="5"/>
+          <line x1="400" y1="350" x2="515" y2="230"/>
+          <line x1="540" y1="350" x2="515" y2="230"/>
+          <!-- 高耸车把立管 -->
+          <line x1="515" y1="230" x2="505" y2="185"/>
+        </g>
+
+        <!-- 巡洋车宽大舒适弹簧坐垫 -->
+        <path d="M 345 252 C 360 244 398 244 410 256 C 390 264 365 264 345 252 Z" fill="#78350f"/>
+        <rect x="372" y="258" width="6" height="15" fill="#94a3b8"/>
+
+        <!-- 复古高扬沙滩车把手与叮叮车铃 -->
+        <path d="M 490 178 Q 525 160 540 195" fill="none" stroke="#e2e8f0" stroke-width="6" stroke-linecap="round"/>
+        <circle id="bell" cx="522" cy="172" r="7" fill="#fbbf24" stroke="#d97706" stroke-width="1.5" class="cursor-pointer"/>
+
+        <!-- 车前大灯 (夜间自动亮起) -->
+        <g id="headlight-unit">
+          <path d="M 520 205 L 536 200 L 536 220 L 520 215 Z" fill="#0f766e" stroke="#115e59" stroke-width="1.5"/>
+          <circle cx="536" cy="210" r="8" fill="#fef08a"/>
+          <polygon id="light-beam" points="538,210 800,240 800,450 538,215" fill="url(#lightBeamGrad)" opacity="0"/>
+        </g>
+
+        <!-- 牙盘中轴 -->
+        <circle cx="400" cy="350" r="18" fill="#0f766e" stroke="#134e4a" stroke-width="2"/>
+
+        <!-- 左腿 (远侧脚) -->
+        <path id="back-leg" fill="none" stroke="#d97706" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" opacity="0.65"/>
+        <polygon id="back-foot" points="0,0 0,0 0,0" fill="#b45309" opacity="0.65"/>
+        <line id="back-crank" x1="400" y1="350" x2="400" y2="350" stroke="#334155" stroke-width="6" stroke-linecap="round"/>
+
+        <!-- 鹈鹕身体总成 -->
+        <g id="pelican-body-group">
+          <!-- 尾羽 -->
+          <path d="M 310 215 Q 290 205 295 235 Q 305 245 335 240 Z" fill="#e2e8f0"/>
+
+          <!-- 身体 -->
+          <ellipse cx="370" cy="215" rx="60" ry="46" fill="#f8fafc"/>
+          
+          <!-- 脖子 -->
+          <path d="M 410 200 C 430 180 445 135 425 95 C 445 95 470 120 455 175 C 448 198 435 220 420 230 Z" fill="#ffffff"/>
+          
+          <!-- 头部与眼睛 -->
+          <circle cx="430" cy="95" r="24" fill="#ffffff"/>
+          <circle cx="440" cy="90" r="5" fill="#0f172a"/>
+          <circle cx="442" cy="88" r="1.5" fill="#ffffff"/>
+
+          <!-- 标志性大喉囊 (迎着海风扑朔微动) -->
+          <g class="wobble-pouch">
+            <path d="M 445 102 Q 500 105 570 110 C 540 180 460 195 435 115 Z" fill="url(#pouchGrad)" stroke="#c2410c" stroke-width="2"/>
+          </g>
+
+          <!-- 坚毅长嘴 -->
+          <path d="M 444 88 Q 505 88 575 106 Q 580 110 570 114 L 445 104 Z" fill="url(#beakGrad)"/>
+
+          <!-- 翅膀 (搭在宽车把上) -->
+          <path d="M 345 200 C 360 165 410 170 445 190 C 420 215 390 235 345 200 Z" fill="#f8fafc" stroke="#cbd5e1" stroke-width="2"/>
+          <path d="M 425 190 Q 480 175 530 185 Q 520 198 480 196 Q 445 205 425 190 Z" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.5"/>
+
+          <!-- 🕶️ 海滩度假专属：酷炫反光太阳镜 -->
+          <g id="sunglasses" class="transition-all duration-300">
+            <!-- 镜框镜片 -->
+            <polygon points="432,83 458,81 455,98 434,97" fill="#0f172a" rx="2"/>
+            <path d="M 425,86 L 434,84" stroke="#0f172a" stroke-width="3" stroke-linecap="round"/>
+            <!-- 镜片彩色海浪反光 -->
+            <polygon points="434,86 454,84 452,90 435,91" fill="#38bdf8" opacity="0.75"/>
+          </g>
+
+          <!-- 🌧️ 雨天戴的黄色小雨帽 (雨天自动出现) -->
+          <g id="rain-hat" opacity="0" class="transition-all duration-300">
+            <ellipse cx="430" cy="76" rx="34" ry="9" fill="#facc15" stroke="#ca8a04" stroke-width="2"/>
+            <path d="M 412 76 C 412 55 448 55 448 76 Z" fill="#eab308" stroke="#ca8a04" stroke-width="2"/>
+          </g>
+        </g>
+
+        <!-- 右腿 (近侧主视角 IK 解算) -->
+        <line id="front-crank" x1="400" y1="350" x2="400" y2="350" stroke="#1e293b" stroke-width="7" stroke-linecap="round"/>
+        <line id="front-pedal" x1="0" y1="0" x2="0" y2="0" stroke="#0f172a" stroke-width="6" stroke-linecap="round"/>
+        <path id="front-leg" fill="none" stroke="#f59e0b" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>
+        <polygon id="front-foot" points="0,0 0,0 0,0" fill="#d97706"/>
+      </g>
+
+      <!-- 雨滴层 (暴雨时激活) -->
+      <g id="rain-layer" stroke="#bae6fd" stroke-linecap="round" opacity="0"></g>
+    </svg>
+
+    <!-- 仪表卡片 -->
+    <div class="absolute top-4 left-4 bg-slate-900/80 backdrop-blur-md px-3.5 py-1.5 rounded-2xl border border-white/10 flex items-center gap-3">
+      <div id="mode-badge" class="text-xs sm:text-sm font-black text-teal-400">☀️ 阳光沙滩</div>
+      <div class="h-3 w-px bg-slate-700"></div>
+      <div class="flex items-center gap-1">
+        <span id="speedometer" class="text-base font-black text-white font-mono">18</span>
+        <span class="text-xs text-slate-400">km/h</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- 下方互动仪表板 -->
+  <div class="w-full max-w-4xl mt-3 bg-slate-900 border border-slate-800 p-3 rounded-2xl flex flex-wrap items-center justify-between gap-4 shadow-xl">
+    <div class="flex items-center gap-3 flex-1 min-w-[200px]">
+      <label class="text-xs font-bold text-slate-400 uppercase tracking-wider">巡航踏频</label>
+      <input id="speedSlider" type="range" min="0.4" max="3.5" step="0.1" value="1.2" 
+        class="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-teal-500">
+    </div>
+
+    <div class="flex items-center gap-2.5">
+      <button id="turboBtn" class="px-5 py-2 bg-gradient-to-r from-teal-500 to-amber-500 hover:brightness-110 active:scale-95 text-slate-950 font-black text-xs sm:text-sm rounded-xl transition shadow-lg shadow-teal-500/20">
+        🚀 极速飞驰 (Turbo)
+      </button>
+      <button id="ringBellBtn" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 active:scale-95 text-teal-300 font-bold text-xs sm:text-sm rounded-xl transition border border-teal-500/20">
+        🔔 叮叮车铃
+      </button>
+    </div>
+  </div>
+
+  <script>
+    // ================= 1. 元素抓取与生成 =================
+    const backSpokes = document.getElementById('back-spokes');
+    const frontSpokes = document.getElementById('front-spokes');
+    const planksGroup = document.getElementById('boardwalk-planks');
+    const palmsLayer = document.getElementById('palm-trees-layer');
+    const sandSprayGroup = document.getElementById('sand-spray');
+    const waveBack = document.getElementById('wave-back');
+    const waveFront = document.getElementById('wave-front');
+    const surfFoam = document.getElementById('surf-foam');
+    const rainLayer = document.getElementById('rain-layer');
+    const lightningOverlay = document.getElementById('lightning-overlay');
+
+    const speedSlider = document.getElementById('speedSlider');
+    const speedometer = document.getElementById('speedometer');
+    const turboBtn = document.getElementById('turboBtn');
+    const ringBellBtn = document.getElementById('ringBellBtn');
+    const bellEl = document.getElementById('bell');
+
+    // 生成前后车轮 12 根辐条
+    for (let i = 0; i < 12; i++) {
+      const rad = (i * 30 * Math.PI) / 180;
+      const cos = Math.cos(rad) * 48;
+      const sin = Math.sin(rad) * 48;
+      
+      const b = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+      b.setAttribute('x1', 300); b.setAttribute('y1', 350);
+      b.setAttribute('x2', 300 + cos); b.setAttribute('y2', 350 + sin);
+      backSpokes.appendChild(b);
+
+      const f = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+      f.setAttribute('x1', 540); f.setAttribute('y1', 350);
+      f.setAttribute('x2', 540 + cos); f.setAttribute('y2', 350 + sin);
+      frontSpokes.appendChild(f);
+    }
+
+    // 生成木栈道拼板缝隙（连续后退）
+    const PLANK_COUNT = 16;
+    const plankLines = [];
+    for (let i = 0; i < PLANK_COUNT; i++) {
+      const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+      line.setAttribute('y1', 415);
+      line.setAttribute('y2', 495);
+      planksGroup.appendChild(line);
+      plankLines.push(line);
+    }
+
+    // 生成掠过的椰子树 🌴 (两棵，错位视差)
+    function createPalmTree() {
+      const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+      // 树干
+      const trunk = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+      trunk.setAttribute('d', 'M 0 410 Q 15 320 5 240 Q -5 180 20 140');
+      trunk.setAttribute('stroke', '#78350f');
+      trunk.setAttribute('stroke-width', '16');
+      trunk.setAttribute('fill', 'none');
+      trunk.setAttribute('stroke-linecap', 'round');
+      g.appendChild(trunk);
+      // 椰子叶
+      const leaves = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+      leaves.setAttribute('d', 'M 20 140 Q 70 120 110 150 M 20 140 Q 50 80 80 80 M 20 140 Q 0 70 -30 90 M 20 140 Q -40 110 -60 150 M 20 140 Q -10 170 0 190');
+      leaves.setAttribute('stroke', '#059669');
+      leaves.setAttribute('stroke-width', '9');
+      leaves.setAttribute('fill', 'none');
+      leaves.setAttribute('stroke-linecap', 'round');
+      g.appendChild(leaves);
+      return g;
+    }
+
+    const palmTrees = [
+      { el: createPalmTree(), x: 200, scale: 0.9 },
+      { el: createPalmTree(), x: 650, scale: 0.75 }
+    ];
+    palmTrees.forEach(p => {
+      palmsLayer.appendChild(p.el);
+    });
+
+    // 飞扬金沙与细水花粒子
+    const sandParticles = [];
+    for (let i = 0; i < 22; i++) {
+      const dot = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+      dot.setAttribute('r', (Math.random() * 2 + 1.2).toFixed(1));
+      dot.setAttribute('fill', '#fde047');
+      dot.setAttribute('opacity', '0');
+      sandSprayGroup.appendChild(dot);
+      sandParticles.push({ el: dot, x: 296, y: 405, vx: 0, vy: 0, life: 0 });
+    }
+
+    // 雨滴池 (暴雨模式用)
+    const MAX_RAIN = 100;
+    const rainDrops = [];
+    for (let i = 0; i < MAX_RAIN; i++) {
+      const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+      line.setAttribute('stroke-width', (Math.random() * 1.5 + 1).toFixed(1));
+      rainLayer.appendChild(line);
+      rainDrops.push({
+        el: line,
+        x: Math.random() * 950 - 50,
+        y: Math.random() * 450,
+        len: Math.random() * 16 + 12,
+        speed: Math.random() * 8 + 14
+      });
+    }
+
+    // ================= 2. 运动学物理核心 =================
+    let cadenceAngle = 0;
+    let wheelAngle = 0;
+    let plankOffset = 0;
+    let waveTime = 0;
+    let baseSpeed = 1.2;
+    let currentSpeed = baseSpeed;
+    let isTurbo = false;
+
+    const CRANK_CENTER = { x: 400, y: 350 };
+    const CRANK_RADIUS = 28;
+    const HIP_OFFSET = { x: 382, y: 245 };
+    const L1 = 62, L2 = 60;
+
+    // 2-Bone IK 算腿
+    function solveIK(hip, foot, l1, l2) {
+      const dx = foot.x - hip.x;
+      const dy = foot.y - hip.y;
+      const dist = Math.hypot(dx, dy);
+      const d = Math.min(dist, l1 + l2 - 0.01);
+      const a = (l1 * l1 - l2 * l2 + d * d) / (2 * d);
+      const h = Math.sqrt(Math.max(0, l1 * l1 - a * a));
+      const midX = hip.x + (dx * a) / d;
+      const midY = hip.y + (dy * a) / d;
+      return {
+        x: midX + (dy * h) / d,
+        y: midY - (dx * h) / d
+      };
+    }
+
+    // 主渲染帧
+    function tick() {
+      const targetSpeed = isTurbo ? baseSpeed * 2.3 : baseSpeed;
+      currentSpeed += (targetSpeed - currentSpeed) * 0.08;
+      speedometer.textContent = Math.round(currentSpeed * 15);
+
+      cadenceAngle += currentSpeed * 0.06;
+      wheelAngle = (wheelAngle + currentSpeed * 6.5) % 360;
+      waveTime += 0.04;
+
+      // 颠簸起伏
+      const roadBump = Math.sin(cadenceAngle * 4) * 1.8;
+      const bodyBob = Math.sin(cadenceAngle * 2) * 3.2;
+      document.getElementById('bike-pelican-rig').setAttribute('transform', `translate(0, ${roadBump * 0.4})`);
+      document.getElementById('pelican-body-group').setAttribute('transform', `translate(0, ${bodyBob})`);
+
+      // 车轮
+      backSpokes.setAttribute('transform', `rotate(${wheelAngle}, 300, 350)`);
+      frontSpokes.setAttribute('transform', `rotate(${wheelAngle}, 540, 350)`);
+
+      // 踏板回转
+      const fPedal = {
+        x: CRANK_CENTER.x + Math.cos(cadenceAngle) * CRANK_RADIUS,
+        y: CRANK_CENTER.y + Math.sin(cadenceAngle) * CRANK_RADIUS
+      };
+      const bPedal = {
+        x: CRANK_CENTER.x + Math.cos(cadenceAngle + Math.PI) * CRANK_RADIUS,
+        y: CRANK_CENTER.y + Math.sin(cadenceAngle + Math.PI) * CRANK_RADIUS
+      };
+
+      document.getElementById('front-crank').setAttribute('x2', fPedal.x);
+      document.getElementById('front-crank').setAttribute('y2', fPedal.y);
+      document.getElementById('front-pedal').setAttribute('x1', fPedal.x - 8);
+      document.getElementById('front-pedal').setAttribute('y1', fPedal.y);
+      document.getElementById('front-pedal').setAttribute('x2', fPedal.x + 8);
+      document.getElementById('front-pedal').setAttribute('y2', fPedal.y);
+
+      document.getElementById('back-crank').setAttribute('x2', bPedal.x);
+      document.getElementById('back-crank').setAttribute('y2', bPedal.y);
+
+      // 双腿解算
+      const hip = { x: HIP_OFFSET.x, y: HIP_OFFSET.y + bodyBob + roadBump * 0.4 };
+      const fKnee = solveIK(hip, fPedal, L1, L2);
+      document.getElementById('front-leg').setAttribute('d', `M ${hip.x} ${hip.y} Q ${fKnee.x} ${fKnee.y} ${fPedal.x} ${fPedal.y}`);
+      document.getElementById('front-foot').setAttribute('points', 
+        `${fPedal.x - 10},${fPedal.y - 2} ${fPedal.x + 14},${fPedal.y} ${fPedal.x + 6},${fPedal.y + 8}`
+      );
+
+      const bKnee = solveIK(hip, bPedal, L1, L2);
+      document.getElementById('back-leg').setAttribute('d', `M ${hip.x} ${hip.y} Q ${bKnee.x} ${bKnee.y} ${bPedal.x} ${bPedal.y}`);
+      document.getElementById('back-foot').setAttribute('points', 
+        `${bPedal.x - 8},${bPedal.y - 2} ${bPedal.x + 12},${bPedal.y} ${bPedal.x + 4},${bPedal.y + 6}`
+      );
+
+      // 木栈道向后移动
+      plankOffset = (plankOffset + currentSpeed * 6.5) % 55;
+      for (let i = 0; i < PLANK_COUNT; i++) {
+        const xPos = (i * 55) - plankOffset;
+        plankLines[i].setAttribute('x1', xPos);
+        plankLines[i].setAttribute('x2', xPos);
+      }
+
+      // 椰子树向后掠过
+      palmTrees.forEach(p => {
+        p.x -= currentSpeed * 2.2 * p.scale;
+        if (p.x < -150) p.x = 920;
+        p.el.setAttribute('transform', `translate(${p.x}, 0) scale(${p.scale})`);
+      });
+
+      // 海浪数学波形动效 (正弦波波动)
+      let dWaveBack = 'M 0 320 ';
+      let dWaveFront = 'M 0 350 ';
+      let dSurf = 'M 0 380 ';
+      for (let x = 0; x <= 800; x += 40) {
+        const yBack = 310 + Math.sin(x * 0.015 + waveTime * 1.5) * 8;
+        const yFront = 345 + Math.sin(x * 0.02 - waveTime * 2.2) * 10;
+        const ySurf = 376 + Math.sin(x * 0.025 + waveTime * 3) * 4;
+        dWaveBack += `L ${x} ${yBack} `;
+        dWaveFront += `L ${x} ${yFront} `;
+        dSurf += `L ${x} ${ySurf} `;
+      }
+      dWaveBack += 'L 800 380 L 0 380 Z';
+      dWaveFront += 'L 800 380 L 0 380 Z';
+      waveBack.setAttribute('d', dWaveBack);
+      waveFront.setAttribute('d', dWaveFront);
+      surfFoam.setAttribute('d', dSurf);
+
+      // 后轮溅沙粒子飞溅
+      sandParticles.forEach(p => {
+        if (p.life <= 0) {
+          p.x = 296 + Math.random() * 8;
+          p.y = 405;
+          p.vx = -(Math.random() * 4 + currentSpeed * 2.4);
+          p.vy = -(Math.random() * 3 + 1);
+          p.life = 1;
+        } else {
+          p.x += p.vx;
+          p.y += p.vy;
+          p.vy += 0.22;
+          p.life -= 0.045;
+          p.el.setAttribute('cx', p.x);
+          p.el.setAttribute('cy', p.y);
+          p.el.setAttribute('opacity', Math.max(0, p.life * 0.75));
+        }
+      });
+
+      // 热带雷雨模式下的雨滴更新
+      const conf = MODES[currentMode];
+      if (conf.rain) {
+        const slant = currentSpeed * 4 + 4;
+        for (let i = 0; i < MAX_RAIN; i++) {
+          const drop = rainDrops[i];
+          drop.x -= slant;
+          drop.y += drop.speed;
+          if (drop.y > 440 || drop.x < -30) {
+            drop.y = Math.random() * -40;
+            drop.x = Math.random() * 860 + 40;
+          }
+          drop.el.setAttribute('x1', drop.x);
+          drop.el.setAttribute('y1', drop.y);
+          drop.el.setAttribute('x2', drop.x - slant * 0.6);
+          drop.el.setAttribute('y2', drop.y + drop.len);
+        }
+      }
+
+      requestAnimationFrame(tick);
+    }
+
+    // ================= 3. 海滩风情滤镜切换 =================
+    const MODES = {
+      sunny: {
+        title: '☀️ 阳光沙滩',
+        sky1: '#38bdf8', sky2: '#bae6fd',
+        sea1: '#0284c7', sea2: '#0e7490',
+        sunColor: '#fef08a', sunOpacity: 0.95, sunY: 120,
+        sand1: '#fde047', sand2: '#eab308',
+        rain: false, hat: false, shades: true, light: 0
+      },
+      sunset: {
+        title: '🌅 椰林日落',
+        sky1: '#f97316', sky2: '#fef08a',
+        sea1: '#c2410c', sea2: '#b45309',
+        sunColor: '#fb923c', sunOpacity: 1, sunY: 210,
+        sand1: '#fb923c', sand2: '#b45309',
+        rain: false, hat: false, shades: true, light: 0.15
+      },
+      rain: {
+        title: '🥥 热带雷雨',
+        sky1: '#334155', sky2: '#64748b',
+        sea1: '#1e293b', sea2: '#334155',
+        sunColor: '#94a3b8', sunOpacity: 0.2, sunY: 120,
+        sand1: '#ca8a04', sand2: '#854d0e',
+        rain: true, hat: true, shades: false, light: 0.4
+      },
+      night: {
+        title: '🌌 荧光海夜',
+        sky1: '#020617', sky2: '#0f172a',
+        sea1: '#0369a1', sea2: '#082f49', // 荧光海蓝
+        sunColor: '#f8fafc', sunOpacity: 0.9, sunY: 90, // 明月
+        sand1: '#1e293b', sand2: '#0f172a',
+        rain: false, hat: false, shades: false, light: 0.9
+      }
+    };
+
+    let currentMode = 'sunny';
+
+    function setMode(mode) {
+      currentMode = mode;
+      const conf = MODES[mode];
+
+      document.querySelectorAll('.mode-btn').forEach(btn => {
+        btn.classList.remove('bg-teal-500', 'text-slate-950');
+        btn.classList.add('text-slate-400');
+      });
+      const activeBtn = document.getElementById(`btn-${mode}`);
+      activeBtn.classList.add('bg-teal-500', 'text-slate-950');
+      activeBtn.classList.remove('text-slate-400');
+
+      document.getElementById('mode-badge').textContent = conf.title;
+      document.getElementById('sky-1').setAttribute('stop-color', conf.sky1);
+      document.getElementById('sky-2').setAttribute('stop-color', conf.sky2);
+
+      document.getElementById('sea-1').setAttribute('stop-color', conf.sea1);
+      document.getElementById('sea-2').setAttribute('stop-color', conf.sea2);
+
+      document.getElementById('sand-1').setAttribute('stop-color', conf.sand1);
+      document.getElementById('sand-2').setAttribute('stop-color', conf.sand2);
+
+      const sun = document.getElementById('sun-orb');
+      sun.setAttribute('fill', conf.sunColor);
+      sun.setAttribute('opacity', conf.sunOpacity);
+      sun.setAttribute('cy', conf.sunY);
+
+      // 雨滴、遮阳帽、墨镜与车灯
+      rainLayer.setAttribute('opacity', conf.rain ? '0.85' : '0');
+      document.getElementById('rain-hat').setAttribute('opacity', conf.hat ? '1' : '0');
+      document.getElementById('sunglasses').setAttribute('opacity', conf.shades ? '1' : '0');
+      document.getElementById('light-beam').setAttribute('opacity', conf.light);
+    }
+
+    // 热带雷暴闪电
+    function lightningLoop() {
+      if (currentMode === 'rain') {
+        lightningOverlay.setAttribute('opacity', '0.85');
+        setTimeout(() => lightningOverlay.setAttribute('opacity', '0.1'), 60);
+        setTimeout(() => lightningOverlay.setAttribute('opacity', '0.9'), 120);
+        setTimeout(() => lightningOverlay.setAttribute('opacity', '0'), 300);
+      }
+      setTimeout(lightningLoop, 4000 + Math.random() * 6000);
+    }
+
+    // 车铃
+    function ding() {
+      try {
+        const ctx = new (window.AudioContext || window.webkitAudioContext)();
+        [1864, 2349].forEach((freq, idx) => {
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          osc.frequency.setValueAtTime(freq, ctx.currentTime + idx * 0.08);
+          gain.gain.setValueAtTime(0.25, ctx.currentTime + idx * 0.08);
+          gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + idx * 0.08 + 0.35);
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+          osc.start(ctx.currentTime + idx * 0.08);
+          osc.stop(ctx.currentTime + idx * 0.08 + 0.35);
+        });
+      } catch (e) {}
+    }
+
+    // ================= 4. 事件监听与启动 =================
+    speedSlider.addEventListener('input', e => baseSpeed = parseFloat(e.target.value));
+    turboBtn.addEventListener('mousedown', () => isTurbo = true);
+    window.addEventListener('mouseup', () => isTurbo = false);
+    turboBtn.addEventListener('touchstart', e => { e.preventDefault(); isTurbo = true; });
+    window.addEventListener('touchend', () => isTurbo = false);
+
+    ringBellBtn.addEventListener('click', ding);
+    bellEl.addEventListener('click', ding);
+
+    // 启动系统
+    requestAnimationFrame(tick);
+    lightningLoop();
+  </script>
+</body>
+</html>
