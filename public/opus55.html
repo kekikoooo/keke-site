@@ -7,69 +7,62 @@
 <meta name="description" content="一只骑沙滩车的鹈鹕：四种海滨天气、踏频调节、极速飞驰和叮叮车铃。drawn by Claude Opus 5.5">
 <style>
   :root {
-    --bg: #020617; --panel: #0f172a; --line: #1e293b; --text: #e2e8f0; --muted: #94a3b8;
+    --panel: rgba(11, 18, 32, .78); --line: rgba(148, 163, 184, .22); --text: #e2e8f0; --muted: #94a3b8;
     --accent: #2dd4bf; --accent-ink: #042f2e;
   }
   * { box-sizing: border-box; }
-  html, body { margin: 0; }
+  html, body { margin: 0; height: 100%; }
   body {
-    min-height: 100vh; min-height: 100dvh;
-    background: radial-gradient(1200px 600px at 50% -10%, #0b2a3a 0%, var(--bg) 60%);
-    color: var(--text);
+    background: #38bdf8; color: var(--text); overflow: hidden;
     font-family: ui-rounded, "SF Pro Rounded", "PingFang SC", "Microsoft YaHei", system-ui, sans-serif;
-    display: flex; justify-content: center;
     -webkit-user-select: none; user-select: none;
   }
-  main { width: 100%; max-width: 920px; padding: 12px 16px 20px; }
+  #scene { position: fixed; inset: 0; width: 100vw; height: 100vh; height: 100dvh; display: block; }
 
-  .pv { display: flex; gap: 4px; justify-content: center; margin-bottom: 10px; font-size: 12px; }
-  .pv a { padding: 5px 10px; border-radius: 999px; color: var(--muted); text-decoration: none;
-          background: rgba(15,23,42,.7); border: 1px solid var(--line); }
-  .pv a:hover { color: var(--text); }
-  .pv a[aria-current] { color: var(--accent-ink); background: var(--accent); border-color: var(--accent); font-weight: 700; }
-
-  header { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 10px; margin-bottom: 10px; }
-  .tag { display: inline-block; font-size: 11px; font-weight: 700; color: var(--accent);
-         padding: 2px 9px; border-radius: 999px; border: 1px solid rgba(45,212,191,.35); background: rgba(45,212,191,.08); }
-  h1 { margin: 4px 0 0; font-size: clamp(20px, 3.6vw, 28px); font-weight: 900; letter-spacing: -.01em;
-       background: linear-gradient(90deg, #2dd4bf, #fcd34d 55%, #fb923c); -webkit-background-clip: text; background-clip: text; color: transparent; }
-  .modes { display: flex; gap: 4px; padding: 5px; border-radius: 16px; background: var(--panel); border: 1px solid var(--line); }
+  .top { position: fixed; z-index: 3; left: 0; right: 0; top: max(8px, env(safe-area-inset-top)); padding: 0 14px; pointer-events: none; }
+  .top > * { pointer-events: auto; }
+  .pv { display: flex; gap: 4px; justify-content: center; font: 12px/1 system-ui, sans-serif; }
+  .pv a { padding: 5px 10px; border-radius: 999px; color: #94a3b8; text-decoration: none; background: rgba(15,23,42,.75); border: 1px solid #1e293b; }
+  .pv a:hover { color: #e2e8f0; }
+  .pv a[aria-current] { color: #042f2e; background: #2dd4bf; border-color: #2dd4bf; font-weight: 700; }
+  .bar { max-width: 1180px; margin: 10px auto 0; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 12px; }
+  .tag { display: inline-block; font-size: 11px; font-weight: 700; color: #5eead4;
+         padding: 2px 9px; border-radius: 999px; border: 1px solid rgba(45,212,191,.4); background: rgba(11,18,32,.6); }
+  h1 { margin: 4px 0 0; font-size: clamp(20px, 3.4vw, 30px); font-weight: 900; letter-spacing: -.01em;
+       background: linear-gradient(90deg, #5eead4, #fde68a 55%, #fdba74); -webkit-background-clip: text; background-clip: text; color: transparent;
+       filter: drop-shadow(0 2px 6px rgba(0,0,0,.5)); }
+  .modes { display: flex; gap: 3px; padding: 4px; border-radius: 15px; background: var(--panel); border: 1px solid var(--line);
+           -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); }
   .modes button { border: 0; cursor: pointer; font: inherit; font-size: 12px; font-weight: 700; color: var(--muted);
                   background: transparent; padding: 7px 10px; border-radius: 11px; transition: background .2s, color .2s; white-space: nowrap; }
   .modes button:hover { color: #fff; }
   .modes button[aria-pressed="true"] { background: var(--accent); color: var(--accent-ink); }
 
-  .stage { position: relative; width: 100%; aspect-ratio: 16 / 10; border-radius: 24px; overflow: hidden;
-           border: 4px solid var(--line); box-shadow: 0 30px 60px -20px rgba(0,0,0,.6); background: #0b1220; }
-  #scene { display: block; width: 100%; height: 100%; }
-  .hud { position: absolute; top: 12px; left: 12px; display: flex; align-items: center; gap: 10px;
-         padding: 6px 12px; border-radius: 14px; background: rgba(15,23,42,.72); border: 1px solid rgba(255,255,255,.1);
-         -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px); font-size: 13px; }
-  .hud .m { color: var(--accent); font-weight: 800; }
-  .hud i { width: 1px; height: 12px; background: #334155; }
-  .hud b { font: 800 16px/1 ui-monospace, SFMono-Regular, Menlo, monospace; color: #fff; min-width: 2.2ch; text-align: right; }
-  .hud small { color: var(--muted); font-size: 11px; }
-  .keys { position: absolute; right: 12px; bottom: 10px; font-size: 11px; color: rgba(255,255,255,.75);
-          text-shadow: 0 1px 2px rgba(0,0,0,.5); pointer-events: none; }
-  @media (hover: none), (max-width: 600px) { .keys { display: none; } }
-  @media (max-width: 600px) {
-    .hud { top: 8px; left: 8px; gap: 6px; padding: 4px 8px; font-size: 11px; border-radius: 10px; }
-    .hud b { font-size: 13px; }
-    .stage { border-radius: 18px; border-width: 3px; }
+  .panel {
+    position: fixed; z-index: 3; left: 50%; transform: translateX(-50%);
+    bottom: max(10px, env(safe-area-inset-bottom)); width: min(900px, calc(100% - 20px));
+    display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 8px 12px; padding: 10px 12px;
+    border-radius: 18px; background: var(--panel); border: 1px solid var(--line);
+    -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); box-shadow: 0 14px 40px -12px rgba(0,0,0,.5);
   }
-
-  .panel { margin-top: 10px; display: flex; flex-wrap: wrap; align-items: center; gap: 12px; padding: 12px;
-           border-radius: 18px; background: var(--panel); border: 1px solid var(--line); }
-  .cad { flex: 1 1 220px; display: flex; align-items: center; gap: 10px; font-size: 12px; font-weight: 700; color: var(--muted); }
-  .cad input { flex: 1; accent-color: var(--accent); height: 22px; }
-  .btns { display: flex; gap: 8px; }
-  .btns button { border: 0; cursor: pointer; font: inherit; font-weight: 800; font-size: 13px; border-radius: 12px; padding: 10px 16px;
+  .cad { flex: 1 1 220px; min-width: 180px; display: flex; align-items: center; gap: 8px; font-size: 12px; font-weight: 700; color: var(--muted); }
+  .cad input { flex: 1; min-width: 60px; accent-color: var(--accent); height: 22px; }
+  .kmh { display: flex; align-items: baseline; gap: 3px; min-width: 62px; justify-content: flex-end; font-size: 11px; }
+  .kmh b { font: 800 17px/1 ui-monospace, SFMono-Regular, Menlo, monospace; color: #fff; }
+  .btns { display: flex; gap: 6px; }
+  .btns button { border: 0; cursor: pointer; font: inherit; font-weight: 800; font-size: 13px; border-radius: 12px; padding: 9px 14px;
                  transition: transform .08s, filter .2s; touch-action: none; }
   .btns button:active, .btns button.held { transform: scale(.96); }
-  #turbo { background: linear-gradient(90deg, #14b8a6, #f59e0b); color: #0b1220; box-shadow: 0 8px 20px -8px rgba(20,184,166,.6); }
+  #turbo { background: linear-gradient(90deg, #14b8a6, #f59e0b); color: #0b1220; }
   #turbo.held { filter: brightness(1.15) saturate(1.2); }
   #bellBtn { background: #1e293b; color: #5eead4; border: 1px solid rgba(45,212,191,.25); }
-  .credit { text-align: center; color: #64748b; font-size: 12px; margin: 12px 0 0; letter-spacing: .03em; }
+  .credit { flex-basis: 100%; margin: 0; text-align: center; font-size: 11px; letter-spacing: .04em; color: #64748b; }
+  .keys { display: none; }
+  @media (hover: hover) and (min-width: 700px) { .keys { display: inline; } }
+  @media (max-width: 600px) {
+    .bar { justify-content: center; text-align: center; }
+    .modes button { padding: 6px 8px; font-size: 11.5px; }
+  }
 
   /* scene colour transitions */
   #scene .t { transition: fill 1.2s ease, stroke 1.2s ease, stop-color 1.2s ease; }
@@ -84,10 +77,9 @@
 </style>
 </head>
 <body>
-<main>
-  <nav class="pv"><a href="index.html">原版</a><a href="opus.html">Opus</a><a href="opus55.html" aria-current="page">Opus 5.5 ✨</a></nav>
-
-  <header>
+<header class="top">
+  <nav class="pv"><a href="index.html">Gemini 4</a><a href="sonnet55.html">Sonnet 5.5</a><a href="opus55.html" aria-current="page">Opus 5.5 ✨</a></nav>
+  <div class="bar">
     <div>
       <span class="tag">Opus 5.5 Edition · 海滨巡航</span>
       <h1>🏝️ 鹈鹕沙滩巡洋记</h1>
@@ -98,12 +90,12 @@
       <button data-mode="rain" aria-pressed="false">⛈️ 热带雷雨</button>
       <button data-mode="night" aria-pressed="false">🌌 荧光海夜</button>
     </div>
-  </header>
+  </div>
+</header>
 
-  <div class="stage">
 <svg id="scene" viewBox="0 0 800 500" role="img" aria-label="一只戴着墨镜的白色鹈鹕骑着复古沙滩车沿海边木栈道前进">
   <defs>
-    <linearGradient id="skyGrad" x1="0" y1="0" x2="0" y2="1">
+    <linearGradient id="skyGrad" gradientUnits="userSpaceOnUse" x1="0" y1="-240" x2="0" y2="256">
       <stop offset="0" class="t" style="stop-color:var(--sky1)"/>
       <stop offset="1" class="t" style="stop-color:var(--sky2)"/>
     </linearGradient>
@@ -179,7 +171,7 @@
   </defs>
 
   <!-- sky -->
-  <rect width="800" height="500" fill="url(#skyGrad)"/>
+  <rect x="-3000" y="-3000" width="6800" height="3400" fill="url(#skyGrad)"/>
   <g id="stars"></g>
   <g id="moon" opacity="0">
     <circle cx="640" cy="88" r="70" fill="url(#moonGlow)"/>
@@ -194,7 +186,7 @@
   <g id="gulls" fill="none" stroke="#ffffff" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"></g>
 
   <!-- sea -->
-  <rect y="256" width="800" height="150" fill="url(#seaGrad)"/>
+  <rect x="-3000" y="256" width="6800" height="150" fill="url(#seaGrad)"/>
   <g id="reflection" stroke="#fde68a" stroke-linecap="round" opacity="0"></g>
   <g id="layerFar"></g>
   <path id="waveBack" class="t" style="fill:var(--wave1)" opacity=".55"/>
@@ -205,12 +197,13 @@
   <g id="layerPalms"></g>
 
   <!-- beach + boardwalk -->
-  <rect y="392" width="800" height="108" fill="url(#sandGrad)"/>
+  <rect x="-3000" y="392" width="6800" height="108" fill="url(#sandGrad)"/>
   <g id="layerSand"></g>
-  <rect y="450" width="800" height="50" class="t" style="fill:var(--board)"/>
+  <rect x="-3000" y="450" width="6800" height="50" class="t" style="fill:var(--board)"/>
   <g id="layerBoard"></g>
-  <rect y="449" width="800" height="5" class="t" style="fill:var(--rail)"/>
-  <rect y="495" width="800" height="5" class="t" style="fill:var(--rail)"/>
+  <rect x="-3000" y="449" width="6800" height="5" class="t" style="fill:var(--rail)"/>
+  <rect x="-3000" y="495" width="6800" height="5" class="t" style="fill:var(--rail)"/>
+  <rect x="-3000" y="500" width="6800" height="3000" class="t" style="fill:var(--sand2)"/>
 
   <!-- ===== rider & bike (drawn in rig space, wrapped) ===== -->
   <g id="rigWrap" transform="translate(30,32) scale(.94)">
@@ -364,7 +357,7 @@
 
   <g id="spray"></g>
   <g id="speedLines" stroke="#ffffff" stroke-linecap="round"></g>
-  <rect id="tint" width="800" height="500" class="t" style="fill:var(--tint)" opacity="0" pointer-events="none"/>
+  <rect id="tint" x="-3000" y="-3000" width="6800" height="6800" class="t" style="fill:var(--tint)" opacity="0" pointer-events="none"/>
 
   <!-- headlamp beam sits above the tint so it actually lights the night -->
   <g id="beamWrap" transform="translate(30,32) scale(.94)" pointer-events="none">
@@ -374,26 +367,22 @@
 
   <g id="rain" stroke="#cbd5e1" stroke-linecap="round" opacity="0" pointer-events="none"></g>
   <path id="bolt" fill="none" stroke="#f8fafc" stroke-width="3" stroke-linejoin="round" filter="url(#glow)" opacity="0"/>
-  <rect id="flash" width="800" height="500" fill="#f8fafc" opacity="0" pointer-events="none"/>
+  <rect id="flash" x="-3000" y="-3000" width="6800" height="6800" fill="#f8fafc" opacity="0" pointer-events="none"/>
 
   <g id="bubble" pointer-events="none">
     <path d="M470,40 h86 a12,12 0 0 1 12,12 v20 a12,12 0 0 1 -12,12 h-62 l-14,14 l2,-14 h-12 a12,12 0 0 1 -12,-12 v-20 a12,12 0 0 1 12,-12 z" fill="#ffffff" stroke="#0f172a" stroke-width="2"/>
     <text x="513" y="69" text-anchor="middle" font-size="19" font-weight="900" fill="#0f172a" font-family="inherit">叮叮~</text>
   </g>
 </svg>
-    <div class="hud" aria-live="polite"><span class="m" id="modeLabel">☀️ 阳光沙滩</span><i></i><b id="kmh">18</b><small>km/h</small></div>
-    <div class="keys">空格 加速 · B 车铃 · 1–4 切换场景</div>
-  </div>
 
-  <div class="panel">
-    <label class="cad">巡航踏频 <input id="cadence" type="range" min="0.4" max="3.5" step="0.1" value="1.2"></label>
-    <div class="btns">
-      <button id="turbo">🚀 极速飞驰 (按住)</button>
-      <button id="bellBtn">🔔 叮叮车铃</button>
-    </div>
+<div class="panel" id="panel">
+  <label class="cad">巡航踏频 <input id="cadence" type="range" min="0.4" max="3.5" step="0.1" value="1.2"><span class="kmh"><b id="kmh">18</b>km/h</span></label>
+  <div class="btns">
+    <button id="turbo">🚀 极速飞驰 (按住)</button>
+    <button id="bellBtn">🔔 叮叮车铃</button>
   </div>
-  <p class="credit">drawn by Claude Opus 5.5</p>
-</main>
+  <p class="credit">drawn by Claude Opus 5.5<span class="keys"> · 空格加速 · B 车铃 · 1–4 切换场景</span></p>
+</div>
 
 <script>
 (() => {
@@ -451,8 +440,8 @@
     const conf = MODES[m];
     for (const k in conf.vars) svg.style.setProperty('--' + k, conf.vars[k]);
     set('sunDisc', 'fill', conf.sunColor);
-    $('modeLabel').textContent = conf.label;
     document.querySelectorAll('.modes button').forEach(b => b.setAttribute('aria-pressed', b.dataset.mode === m));
+    document.body.style.background = conf.vars.sky1;
     if (instant) { Object.assign(amt, conf.amt); sunPos[0] = conf.sun[0]; sunPos[1] = conf.sun[1]; }
     nextStrike = time + rand(1.2, 3);
     if (reduced) render(0);
@@ -462,7 +451,7 @@
   // ---------- Scenery ----------
   function tileLayer(layerId, tileId) {
     const layer = $(layerId);
-    for (let k = -1; k <= 2; k++) {
+    for (let k = -3; k <= 4; k++) {
       const u = el('use', { href: '#' + tileId, x: k * TILE }, layer);
       u.setAttributeNS(XL, 'xlink:href', '#' + tileId);
     }
@@ -539,8 +528,8 @@
 
   // stars
   const stars = [];
-  for (let i = 0; i < 70; i++) {
-    stars.push({ n: el('circle', { cx: srand(0, 800), cy: srand(0, 240), r: srand(.5, 1.6), fill: '#fff' }, $('stars')), s: srand(.8, 3), p: srand(0, 6.28) });
+  for (let i = 0; i < 130; i++) {
+    stars.push({ n: el('circle', { cx: srand(-700, 1500), cy: srand(-500, 240), r: srand(.5, 1.6), fill: '#fff' }, $('stars')), s: srand(.8, 3), p: srand(0, 6.28) });
   }
   // gulls
   const gulls = [[230, 128, 0], [292, 146, 1.7], [700, 112, 3.1]].map(([x, y, ph]) => ({ n: el('path', {}, $('gulls')), x, y, ph }));
@@ -635,6 +624,24 @@
     });
   }
 
+  // ---------- Full-screen framing ----------
+  const BOX = { x: 60, y: 40, w: 680, h: 460 };
+  const vb = { x: 0, y: 0, w: 800, h: 500 };
+  function fit() {
+    const W = window.innerWidth, H = window.innerHeight;
+    const T = document.querySelector('.top').getBoundingClientRect().bottom + 6;
+    const B = H - $('panel').getBoundingClientRect().top + 4;
+    const availH = Math.max(H - T - B, H * .35);
+    const sc = Math.min(W / BOX.w, availH / BOX.h);
+    vb.w = W / sc; vb.h = H / sc;
+    vb.x = BOX.x - (vb.w - BOX.w) / 2;
+    vb.y = BOX.y - (T + (availH - BOX.h * sc) / 2) / sc;
+    svg.setAttribute('viewBox', `${vb.x.toFixed(1)} ${vb.y.toFixed(1)} ${vb.w.toFixed(1)} ${vb.h.toFixed(1)}`);
+    if (reduced) render(0);
+  }
+  window.addEventListener('resize', fit);
+  if (window.ResizeObserver) { const ro = new ResizeObserver(fit); ro.observe($('panel')); ro.observe(document.querySelector('.top')); }
+
   // ---------- Simulation state ----------
   const slider = $('cadence');
   let base = parseFloat(slider.value), cur = base, turbo = false;
@@ -644,21 +651,22 @@
   const reduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
   function wavePath(y0, amp, len, ph, bottom) {
-    let d = `M0,${bottom}`;
-    for (let x = 0; x <= 800; x += 10) {
+    const x0 = Math.floor((vb.x - 20) / 10) * 10, x1 = vb.x + vb.w + 20;
+    let d = `M${x0},${bottom}`;
+    for (let x = x0; x <= x1 + 10; x += 10) {
       const y = y0 + amp * Math.sin(x / len * 6.283 + ph) + amp * .35 * Math.sin(x / (len * .47) * 6.283 + ph * 1.7);
       d += ` L${x},${y.toFixed(1)}`;
     }
-    return d + ` L800,${bottom} Z`;
+    return d + ` L${x1 + 10},${bottom} Z`;
   }
 
   function strike() {
-    let x = rand(90, 720), y = -5, d = `M${x.toFixed(0)},${y}`;
+    let x = rand(vb.x + 60, vb.x + vb.w - 60), y = vb.y, d = `M${x.toFixed(0)},${y.toFixed(0)}`;
     let branch = '';
     while (y < 250) {
       y += rand(18, 34); x += rand(-28, 28);
       d += ` L${x.toFixed(0)},${y.toFixed(0)}`;
-      if (!branch && y > 90 && Math.random() < .5) {
+      if (!branch && y > vb.y + 90 && Math.random() < .5) {
         let bx = x, by = y; branch = ` M${bx.toFixed(0)},${by.toFixed(0)}`;
         for (let k = 0; k < 3; k++) { bx += rand(10, 30) * (Math.random() < .5 ? -1 : 1); by += rand(16, 26); branch += ` L${bx.toFixed(0)},${by.toFixed(0)}`; }
       }
@@ -706,8 +714,9 @@
     const wph = dist * .012 + time * 1.1;
     set('waveBack', 'd', wavePath(322, 5, 130, wph * .6, 400));
     set('waveFront', 'd', wavePath(362, 7, 160, wph, 400));
-    let fd = 'M0,393';
-    for (let x = 0; x <= 800; x += 20) fd += ` L${x},${(392 + 2.2 * Math.sin(x / 70 + time * 2.2)).toFixed(1)}`;
+    const fx0 = Math.floor((vb.x - 20) / 20) * 20;
+    let fd = `M${fx0},393`;
+    for (let x = fx0; x <= vb.x + vb.w + 40; x += 20) fd += ` L${x},${(392 + 2.2 * Math.sin(x / 70 + time * 2.2)).toFixed(1)}`;
     set('foam', 'd', fd);
     set('foam', 'stroke-dashoffset', (dist * .9 % 23).toFixed(1));
 
@@ -720,7 +729,7 @@
 
     $('bio').style.opacity = amt.bio.toFixed(3);
     if (amt.bio > .01) bio.forEach(b => {
-      const x = ((b.x - dist * .5 - time * 6) % 800 + 800) % 800;
+      const x = vb.x + (((b.x / 800 * vb.w - dist * .5 - time * 6) % vb.w) + vb.w) % vb.w;
       b.n.setAttribute('cx', x.toFixed(1));
       b.n.setAttribute('cy', (b.y + 3 * Math.sin(time * 1.6 + b.p)).toFixed(1));
       b.n.setAttribute('opacity', (.25 + .75 * Math.max(0, Math.sin(time * 2.2 + b.p))).toFixed(2));
@@ -792,7 +801,7 @@
     $('speedLines').style.opacity = (boost * .6).toFixed(3);
     if (boost > .01) streaks.forEach(s => {
       s.x -= (900 + px) * dt;
-      if (s.x + s.len < 0) { s.x = 800 + rand(0, 200); s.y = rand(120, 430); s.len = rand(40, 110); }
+      if (s.x + s.len < vb.x) { s.x = vb.x + vb.w + rand(0, 200); s.y = rand(Math.max(vb.y + 60, 0), 430); s.len = rand(40, 110); }
       s.n.setAttribute('x1', s.x.toFixed(1)); s.n.setAttribute('x2', (s.x + s.len).toFixed(1));
       s.n.setAttribute('y1', s.y.toFixed(1)); s.n.setAttribute('y2', s.y.toFixed(1));
     });
@@ -800,10 +809,10 @@
     // rain & lightning
     $('rain').style.opacity = (amt.rain * .85).toFixed(3);
     if (amt.rain > .01) {
-      const slant = 120 + px * .9;
+      const slant = 120 + px * .9, bottom = vb.y + vb.h;
       drops.forEach(d => {
         d.y += d.v * dt; d.x -= slant * dt;
-        if (d.y > 500 || d.x < -40) { d.y = rand(-60, -10); d.x = rand(0, 950); }
+        if (d.y > bottom || d.x < vb.x - 40) { d.y = vb.y - rand(10, 60); d.x = vb.x + rand(0, vb.w + slant * 1.2); }
         const sx = slant / d.v * d.len;
         d.n.setAttribute('x1', d.x.toFixed(1)); d.n.setAttribute('y1', d.y.toFixed(1));
         d.n.setAttribute('x2', (d.x - sx).toFixed(1)); d.n.setAttribute('y2', (d.y + d.len).toFixed(1));
@@ -876,6 +885,7 @@
 
   // ---------- Loop ----------
   setMode('sunny', true);
+  fit();
   render(0);
   if (!reduced) {
     const tick = t => {
