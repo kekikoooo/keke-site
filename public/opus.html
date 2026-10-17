@@ -1,0 +1,494 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Pelican on a Bicycle</title>
+<meta name="description" content="An animated SVG pelican riding a bicycle, drawn by Claude Opus.">
+<style>
+  :root {
+    --ink: #1f2a37;
+    --ink-soft: rgba(31, 42, 55, .62);
+    --sky: #bfe3f2;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; }
+  body {
+    background: var(--sky);
+    color: var(--ink);
+    font-family: ui-rounded, "SF Pro Rounded", "Segoe UI", system-ui, -apple-system, sans-serif;
+    overflow: hidden;
+  }
+  #scene {
+    position: fixed; inset: 0;
+    width: 100vw; height: 100vh; height: 100dvh;
+    display: block;
+  }
+  h1 {
+    position: fixed; z-index: 1; left: 0; right: 0;
+    top: max(14px, env(safe-area-inset-top));
+    margin: 0; padding: 0 56px;
+    text-align: center;
+    font-weight: 750;
+    font-size: clamp(22px, 4.2vw, 44px);
+    letter-spacing: -.01em;
+    line-height: 1.1;
+    text-shadow: 0 1px 0 rgba(255,255,255,.55);
+    pointer-events: none;
+  }
+  .caption {
+    position: fixed; z-index: 1; left: 0; right: 0;
+    bottom: max(12px, env(safe-area-inset-bottom));
+    margin: 0;
+    text-align: center;
+    font-size: 13px;
+    letter-spacing: .04em;
+    color: rgba(255,255,255,.9);
+    text-shadow: 0 1px 2px rgba(0,0,0,.35);
+    pointer-events: none;
+  }
+  .other {
+    position: fixed;
+    top: max(8px, env(safe-area-inset-top));
+    left: max(10px, env(safe-area-inset-left));
+    font-size: 11px;
+    color: var(--ink-soft);
+    text-decoration: none;
+    padding: 4px 2px;
+    z-index: 2;
+  }
+  .other:hover, .other:focus-visible { color: var(--ink); text-decoration: underline; }
+</style>
+</head>
+<body>
+<a class="other" href="/">other pelican</a>
+<h1>Pelican on a Bicycle</h1>
+
+<svg id="scene" viewBox="110 -10 580 490" preserveAspectRatio="xMidYMid meet" role="img" aria-label="A white pelican with a big orange pouch bill pedaling a red bicycle along a country road">
+  <defs>
+    <linearGradient id="sky" gradientUnits="userSpaceOnUse" x1="0" y1="-300" x2="0" y2="445">
+      <stop offset="0" stop-color="#7cc4e6"/>
+      <stop offset=".75" stop-color="#bfe3f2"/>
+      <stop offset="1" stop-color="#f3ead2"/>
+    </linearGradient>
+    <radialGradient id="sunGlow">
+      <stop offset="0" stop-color="#fff6c9"/>
+      <stop offset=".45" stop-color="#ffe58a"/>
+      <stop offset="1" stop-color="#ffe58a" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="bodyGrad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#ffffff"/>
+      <stop offset=".7" stop-color="#f1f3f6"/>
+      <stop offset="1" stop-color="#d9dee6"/>
+    </linearGradient>
+    <linearGradient id="pouchGrad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#ffcf73"/>
+      <stop offset="1" stop-color="#f29a3a"/>
+    </linearGradient>
+    <linearGradient id="billGrad" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#f7c45a"/>
+      <stop offset="1" stop-color="#f0a33c"/>
+    </linearGradient>
+
+    <!-- Parallax tiles, each 800 wide and seamless -->
+    <g id="tileClouds">
+      <g fill="#fff" opacity=".92">
+        <ellipse cx="90" cy="40" rx="46" ry="16"/><ellipse cx="120" cy="30" rx="30" ry="18"/><ellipse cx="70" cy="34" rx="22" ry="13"/>
+        <ellipse cx="420" cy="70" rx="56" ry="15"/><ellipse cx="445" cy="58" rx="30" ry="17"/><ellipse cx="400" cy="62" rx="22" ry="12"/>
+        <ellipse cx="660" cy="20" rx="38" ry="12"/><ellipse cx="680" cy="12" rx="22" ry="13"/>
+      </g>
+    </g>
+    <g id="tileFar"><path id="farHills" fill="#a9cfd8"/></g>
+    <g id="tileMid">
+      <path id="midHills" fill="#8cc084"/>
+      <g id="trees"></g>
+    </g>
+    <g id="tileGround">
+      <g stroke="#fffbe8" stroke-width="3" stroke-linecap="round">
+        <line x1="20" y1="462" x2="70" y2="462"/><line x1="220" y1="462" x2="270" y2="462"/>
+        <line x1="420" y1="462" x2="470" y2="462"/><line x1="620" y1="462" x2="670" y2="462"/>
+      </g>
+      <g fill="#8a8173" opacity=".55">
+        <ellipse cx="130" cy="452" rx="3" ry="1.6"/><ellipse cx="340" cy="470" rx="2.5" ry="1.3"/>
+        <ellipse cx="560" cy="451" rx="3.5" ry="1.8"/><ellipse cx="740" cy="472" rx="2.2" ry="1.2"/>
+      </g>
+      <g id="tufts" stroke="#5f9c4f" stroke-width="2" stroke-linecap="round" fill="none"></g>
+    </g>
+  </defs>
+
+  <!-- Sky & sun -->
+  <rect x="-4000" y="-3000" width="8800" height="3460" fill="url(#sky)"/>
+  <circle cx="610" cy="70" r="80" fill="url(#sunGlow)"/>
+  <circle cx="610" cy="70" r="30" fill="#fff3b8"/>
+
+  <g id="layerClouds"></g>
+  <g id="layerFar"></g>
+  <g id="layerMid"></g>
+
+  <!-- Ground -->
+  <rect x="-4000" y="440" width="8800" height="3000" fill="#7fb36f"/>
+  <rect x="-4000" y="444" width="8800" height="36" fill="#cbbfa6"/>
+  <rect x="-4000" y="444" width="8800" height="3" fill="#b3a68b"/>
+  <rect x="-4000" y="478" width="8800" height="3" fill="#6b9f5d"/>
+  <g id="layerGround"></g>
+
+  <!-- Shadow -->
+  <ellipse cx="390" cy="448" rx="185" ry="7" fill="#000" opacity=".13"/>
+
+  <!-- ===== Rider & bike ===== -->
+  <g id="rig">
+    <!-- far side: leg, crank, wing (behind frame) -->
+    <g id="farLeg" opacity=".95">
+      <path id="farThigh" fill="none" stroke="#c9cfd8" stroke-width="20" stroke-linecap="round"/>
+      <path id="farShin" fill="none" stroke="#c96a1c" stroke-width="7" stroke-linecap="round"/>
+      <path id="farFoot" fill="#c96a1c"/>
+    </g>
+    <line id="farCrank" stroke="#5b6470" stroke-width="5" stroke-linecap="round"/>
+    <rect id="farPedal" width="16" height="5" rx="1.5" fill="#3b4048"/>
+
+    <!-- wheels -->
+    <g id="rearWheel">
+      <circle cx="250" cy="360" r="85" fill="none" stroke="#23262b" stroke-width="8"/>
+      <circle cx="250" cy="360" r="80" fill="none" stroke="#b9c0c9" stroke-width="2.5"/>
+      <g id="rearSpin"></g>
+      <circle cx="250" cy="360" r="6" fill="#8b939e"/>
+      <circle cx="250" cy="360" r="8" fill="none" stroke="#4a5059" stroke-width="2"/>
+    </g>
+    <g id="frontWheel">
+      <circle cx="530" cy="360" r="85" fill="none" stroke="#23262b" stroke-width="8"/>
+      <circle cx="530" cy="360" r="80" fill="none" stroke="#b9c0c9" stroke-width="2.5"/>
+      <g id="frontSpin"></g>
+      <circle cx="530" cy="360" r="6" fill="#8b939e"/>
+    </g>
+
+    <!-- far wing (behind body) -->
+    <path id="farWing" fill="#cdd3dc" stroke="#aab2bd" stroke-width="1.2" stroke-linejoin="round"/>
+    <g id="farPrimaries" fill="#2a2d33"></g>
+
+    <!-- frame: rear R(250,360) BB(375,375) seat S(337,250) head H1(500,245) H2(510,280) front F(530,360) -->
+    <g fill="none" stroke-linecap="round" stroke-linejoin="round">
+      <!-- chain -->
+      <path id="chain" d="M375,357 L250,352 M375,393 L250,368" stroke="#4b5059" stroke-width="2.6" stroke-dasharray="3.2 2.2"/>
+      <g stroke="#d8433a">
+        <line x1="250" y1="360" x2="337" y2="250" stroke-width="5"/>   <!-- seat stay -->
+        <line x1="250" y1="360" x2="375" y2="375" stroke-width="5.5"/> <!-- chain stay -->
+        <line x1="375" y1="375" x2="337" y2="250" stroke-width="7.5"/> <!-- seat tube -->
+        <line x1="337" y1="250" x2="500" y2="247" stroke-width="7"/>   <!-- top tube -->
+        <line x1="375" y1="375" x2="508" y2="276" stroke-width="8.5"/> <!-- down tube -->
+        <line x1="499" y1="242" x2="510" y2="282" stroke-width="10"/>  <!-- head tube -->
+      </g>
+      <!-- fork with rake -->
+      <path d="M509,280 Q522,330 534,358" stroke="#b9c0c9" stroke-width="6"/>
+      <!-- seat post & stem -->
+      <line x1="337" y1="250" x2="331" y2="229" stroke="#9aa3ad" stroke-width="5"/>
+      <line x1="499" y1="243" x2="496" y2="223" stroke="#9aa3ad" stroke-width="5.5"/>
+      <!-- handlebar -->
+      <path d="M486,223 L512,220 Q523,219 523,229 Q523,236 517,238" stroke="#2f343b" stroke-width="5"/>
+    </g>
+    <circle cx="250" cy="360" r="9" fill="none" stroke="#5b6470" stroke-width="2.5"/>
+    <!-- saddle -->
+    <path d="M306,224 Q312,219 330,221 L352,225 Q356,228 350,230 Q330,232 312,231 Q304,229 306,224 Z" fill="#2b2e33"/>
+
+    <!-- chainring -->
+    <g id="ring">
+      <circle cx="375" cy="375" r="19" fill="none" stroke="#7d8692" stroke-width="3.5" stroke-dasharray="2 1.6"/>
+      <circle cx="375" cy="375" r="15" fill="none" stroke="#a7afb9" stroke-width="2"/>
+      <g stroke="#a7afb9" stroke-width="3" stroke-linecap="round">
+        <line x1="375" y1="375" x2="375" y2="361"/><line x1="375" y1="375" x2="388.3" y2="379.3"/>
+        <line x1="375" y1="375" x2="383.2" y2="386.3"/><line x1="375" y1="375" x2="366.8" y2="386.3"/>
+        <line x1="375" y1="375" x2="361.7" y2="379.3"/>
+      </g>
+    </g>
+
+    <!-- pelican body (bobs) -->
+    <g id="body">
+      <!-- tail -->
+      <path d="M302,196 L266,188 Q262,194 272,199 L262,205 Q264,212 276,210 L270,218 Q280,222 304,212 Z" fill="#e6e9ee" stroke="#b9c0ca" stroke-width="1.2"/>
+      <!-- body -->
+      <ellipse cx="362" cy="192" rx="69" ry="41" transform="rotate(-20 362 192)" fill="url(#bodyGrad)" stroke="#b9c0ca" stroke-width="1.4"/>
+      <path d="M318,214 Q350,232 392,212" fill="none" stroke="#d4d9e1" stroke-width="2"/>
+      <!-- neck -->
+      <path d="M404,174 C 446,162 414,128 446,112" fill="none" stroke="#b9c0ca" stroke-width="31" stroke-linecap="round"/>
+      <path d="M404,174 C 446,162 414,128 446,112" fill="none" stroke="#fbfcfd" stroke-width="28" stroke-linecap="round"/>
+      <path d="M433,152 Q441,140 432,128" fill="none" stroke="#f3e2a4" stroke-width="5" stroke-linecap="round" opacity=".8"/>
+      <!-- head -->
+      <g id="head">
+        <!-- crest -->
+        <path d="M436,92 Q420,86 414,92 Q424,94 432,99 Q418,100 414,107 Q426,104 436,106 Z" fill="#f4f0e2" stroke="#c7c2b1" stroke-width="1"/>
+        <circle cx="452" cy="103" r="20.5" fill="#fbfcfd" stroke="#b9c0ca" stroke-width="1.4"/>
+        <!-- pouch -->
+        <g id="pouch">
+          <path d="M464,113 Q520,126 576,139 Q566,165 520,172 Q476,174 452,124 Z" fill="url(#pouchGrad)" stroke="#d1802a" stroke-width="1.4" stroke-linejoin="round"/>
+          <path d="M478,138 Q510,150 548,150" fill="none" stroke="#e08a2f" stroke-width="1.2" opacity=".6"/>
+        </g>
+        <!-- upper mandible with hooked tip -->
+        <path d="M456,90 Q520,100 582,130 Q593,136 588,146 Q584,141 577,141 Q520,126 464,115 Q452,106 456,90 Z" fill="url(#billGrad)" stroke="#d1802a" stroke-width="1.4" stroke-linejoin="round"/>
+        <path d="M470,99 Q525,110 578,133" fill="none" stroke="#e6923a" stroke-width="1.2" opacity=".7"/>
+        <path d="M582,132 Q592,137 588,146 Q585,141 579,140 Z" fill="#e06a34"/>
+        <!-- eye -->
+        <circle cx="459" cy="98" r="5.6" fill="#f6c7b9"/>
+        <circle cx="459.6" cy="98" r="3.4" fill="#e9d36f"/>
+        <circle cx="460" cy="98" r="1.9" fill="#1d1f24"/>
+        <circle cx="460.8" cy="97.2" r=".7" fill="#fff"/>
+      </g>
+    </g>
+
+    <!-- near crank, pedal, leg -->
+    <line id="nearCrank" stroke="#9aa3ad" stroke-width="5.5" stroke-linecap="round"/>
+    <circle cx="375" cy="375" r="4" fill="#5b6470"/>
+    <g id="nearLeg">
+      <path id="nearThighO" fill="none" stroke="#d6dbe2" stroke-width="23" stroke-linecap="round"/>
+      <path id="nearThigh" fill="none" stroke="#f4f6f9" stroke-width="21" stroke-linecap="round"/>
+      <path id="nearShinO" fill="none" stroke="#c65f16" stroke-width="9" stroke-linecap="round"/>
+      <path id="nearShin" fill="none" stroke="#f08a24" stroke-width="6.5" stroke-linecap="round"/>
+    </g>
+    <rect id="nearPedal" width="17" height="5" rx="1.5" fill="#2b2e33"/>
+    <path id="nearFoot" fill="#f08a24" stroke="#c65f16" stroke-width="1.2" stroke-linejoin="round"/>
+
+    <!-- near wing (in front) -->
+    <path id="nearWing" fill="#fbfcfd" stroke="#aeb6c1" stroke-width="1.4" stroke-linejoin="round"/>
+    <path id="nearWingLine" fill="none" stroke="#d3d9e1" stroke-width="1.6"/>
+    <g id="nearPrimaries" fill="#22252b" stroke="#000" stroke-width=".6"></g>
+  </g>
+</svg>
+
+<p class="caption">drawn by Claude Opus</p>
+
+<script>
+(() => {
+  const NS = 'http://www.w3.org/2000/svg';
+  const $ = id => document.getElementById(id);
+  const svg = $('scene');
+  const el = (tag, attrs, parent) => {
+    const n = document.createElementNS(NS, tag);
+    for (const k in attrs) n.setAttribute(k, attrs[k]);
+    if (parent) parent.appendChild(n);
+    return n;
+  };
+  const TILE = 800;
+
+  // ---------- Build seamless background tiles ----------
+  function hills(base, parts) {
+    let d = `M0,${base}`;
+    for (let x = 0; x <= TILE; x += 10) {
+      let y = base;
+      for (const [amp, cyc, ph] of parts) y += amp * Math.sin((x / TILE) * cyc * 2 * Math.PI + ph);
+      d += ` L${x},${y.toFixed(1)}`;
+    }
+    return d + ` L${TILE},460 L0,460 Z`;
+  }
+  $('farHills').setAttribute('d', hills(345, [[22, 1, .4], [12, 3, 1.7], [5, 7, .2]]));
+  $('midHills').setAttribute('d', hills(400, [[14, 2, 2.1], [8, 5, .9], [3, 9, .3]]));
+
+  const trees = $('trees');
+  [[60, 392, 1], [175, 398, .8], [330, 386, 1.15], [470, 402, .75], [610, 390, 1], [720, 396, .85]].forEach(([x, y, s]) => {
+    const g = el('g', { transform: `translate(${x},${y}) scale(${s})` }, trees);
+    el('rect', { x: -3, y: -6, width: 6, height: 20, fill: '#7a5a3c' }, g);
+    el('ellipse', { cx: 0, cy: -22, rx: 17, ry: 22, fill: '#5d9a52' }, g);
+    el('ellipse', { cx: -5, cy: -28, rx: 8, ry: 10, fill: '#72ad64' }, g);
+  });
+  const tufts = $('tufts');
+  [40, 150, 260, 390, 505, 600, 700, 770].forEach((x, i) => {
+    const y = i % 2 ? 488 : 500;
+    el('path', { d: `M${x},${y} l-4,-8 M${x},${y} l0,-10 M${x},${y} l5,-8` }, tufts);
+  });
+
+  function tileLayer(layerId, tileId) {
+    const layer = $(layerId);
+    for (let k = -5; k <= 6; k++) el('use', { href: '#' + tileId, x: k * TILE }, layer);
+    return layer;
+  }
+  const layers = [
+    [tileLayer('layerClouds', 'tileClouds'), 0.06],
+    [tileLayer('layerFar', 'tileFar'), 0.18],
+    [tileLayer('layerMid', 'tileMid'), 0.42],
+    [tileLayer('layerGround', 'tileGround'), 1.0],
+  ];
+
+  // ---------- Spokes ----------
+  function spokes(gid, cx, cy) {
+    const g = $(gid);
+    const N = 18;
+    for (let i = 0; i < N; i++) {
+      const a = (i / N) * 2 * Math.PI, off = (i % 2 ? 1 : -1) * 0.05;
+      el('line', {
+        x1: cx + 6 * Math.cos(a + off * 8), y1: cy + 6 * Math.sin(a + off * 8),
+        x2: cx + 79 * Math.cos(a), y2: cy + 79 * Math.sin(a),
+        stroke: '#c9cfd6', 'stroke-width': 1.1
+      }, g);
+    }
+    el('rect', { x: cx - 2, y: cy - 84, width: 4, height: 7, fill: '#777', rx: 1 }, g); // valve
+    el('circle', { cx: cx + 50, cy: cy, r: 3.2, fill: '#f2c94c' }, g);                 // reflector
+  }
+  spokes('rearSpin', 250, 360);
+  spokes('frontSpin', 530, 360);
+
+  // ---------- Geometry ----------
+  const BB = [375, 375], CRANK = 32;
+  const RING_R = 19, COG_R = 8, GEAR = RING_R / COG_R;      // wheel turns GEAR x per crank turn
+  const WHEEL_R = 85;
+  const HIP = [350, 219];
+  const THIGH = 92, SHIN = 100;
+  const SHOULDER_N = [393, 170], SHOULDER_F = [402, 160];
+  const GRIP_N = [517, 222], GRIP_F = [508, 219];
+  const UPPER = 78, FORE = 72;
+
+  // Two-bone IK: returns [joint, end]. dir=-1 bends the joint "clockwise-forward".
+  function ik(o, t, l1, l2, dir) {
+    let dx = t[0] - o[0], dy = t[1] - o[1];
+    let d = Math.hypot(dx, dy);
+    const dc = Math.min(Math.max(d, Math.abs(l1 - l2) + 0.5), l1 + l2 - 0.01);
+    const a = Math.atan2(dy, dx);
+    const c = (l1 * l1 + dc * dc - l2 * l2) / (2 * l1 * dc);
+    const al = Math.acos(Math.min(1, Math.max(-1, c)));
+    const ang = a + dir * al;
+    const j = [o[0] + l1 * Math.cos(ang), o[1] + l1 * Math.sin(ang)];
+    const ex = t[0] - j[0], ey = t[1] - j[1], el2 = Math.hypot(ex, ey) || 1;
+    return [j, [j[0] + ex / el2 * l2, j[1] + ey / el2 * l2]];
+  }
+  const P = p => p[0].toFixed(2) + ',' + p[1].toFixed(2);
+  const set = (id, attr, v) => $(id).setAttribute(attr, v);
+
+  function leg(prefix, hip, pedal, isNear) {
+    const ankleT = [pedal[0] - 2, pedal[1] - 10];
+    const [knee, ankle] = ik(hip, ankleT, THIGH, SHIN, -1);
+    const thigh = `M${P(hip)} L${P(knee)}`, shin = `M${P(knee)} L${P(ankle)}`;
+    // webbed foot: three toes splayed over the pedal
+    const px = pedal[0], py = pedal[1] - 1;
+    const foot = `M${P(ankle)} L${(px + 17).toFixed(1)},${(py - 1).toFixed(1)} ` +
+      `Q${(px + 13).toFixed(1)},${(py + 2).toFixed(1)} ${(px + 8).toFixed(1)},${(py + 1).toFixed(1)} ` +
+      `Q${(px + 4).toFixed(1)},${(py + 3.5).toFixed(1)} ${(px - 1).toFixed(1)},${(py + 1.5).toFixed(1)} ` +
+      `Q${(px - 6).toFixed(1)},${(py + 3).toFixed(1)} ${(px - 10).toFixed(1)},${(py).toFixed(1)} Z`;
+    if (isNear) {
+      set('nearThighO', 'd', thigh); set('nearThigh', 'd', thigh);
+      set('nearShinO', 'd', shin); set('nearShin', 'd', shin);
+      set('nearFoot', 'd', foot);
+    } else {
+      set('farThigh', 'd', thigh); set('farShin', 'd', shin); set('farFoot', 'd', foot);
+    }
+  }
+
+  function wing(pathId, primId, shoulder, grip, lineId) {
+    const [elbow, wrist] = ik(shoulder, grip, UPPER, FORE, -1);
+    // perpendicular (trailing edge side) for each segment
+    const n1 = [-(elbow[1] - shoulder[1]) / UPPER, (elbow[0] - shoulder[0]) / UPPER];
+    const n2 = [-(wrist[1] - elbow[1]) / FORE, (wrist[0] - elbow[0]) / FORE];
+    const nAvg = [(n1[0] + n2[0]) / 2, (n1[1] + n2[1]) / 2];
+    const sTop = [shoulder[0] - n1[0] * 10, shoulder[1] - n1[1] * 10];
+    const eTop = [elbow[0] - nAvg[0] * 7, elbow[1] - nAvg[1] * 7];
+    const wTop = [wrist[0] - n2[0] * 4, wrist[1] - n2[1] * 4];
+    const wBot = [wrist[0] + n2[0] * 8, wrist[1] + n2[1] * 8];
+    const eBot = [elbow[0] + nAvg[0] * 26, elbow[1] + nAvg[1] * 26];
+    const sBot = [shoulder[0] + n1[0] * 30, shoulder[1] + n1[1] * 30];
+    // scalloped trailing edge (secondary feathers)
+    let d = `M${P(sTop)} Q${P([(sTop[0] + eTop[0]) / 2 - n1[0] * 8, (sTop[1] + eTop[1]) / 2 - n1[1] * 8])} ${P(eTop)} L${P(wTop)} L${P(wBot)}`;
+    const seg = (a, b, n, k) => {
+      for (let i = 1; i <= k; i++) {
+        const t0 = (i - 1) / k, t1 = i / k, tm = (t0 + t1) / 2;
+        const m = [a[0] + (b[0] - a[0]) * tm + n[0] * 6, a[1] + (b[1] - a[1]) * tm + n[1] * 6];
+        const e = [a[0] + (b[0] - a[0]) * t1, a[1] + (b[1] - a[1]) * t1];
+        d += ` Q${P(m)} ${P(e)}`;
+      }
+    };
+    seg(wBot, eBot, n2, 3);
+    seg(eBot, sBot, n1, 3);
+    d += ` Q${P([shoulder[0] - n1[0] * 4 - (elbow[0] - shoulder[0]) * .25, shoulder[1] - n1[1] * 4 - (elbow[1] - shoulder[1]) * .25])} ${P(sTop)} Z`;
+    set(pathId, 'd', d);
+    if (lineId) set(lineId, 'd', `M${P([shoulder[0] + n1[0] * 12, shoulder[1] + n1[1] * 12])} Q${P([elbow[0] + nAvg[0] * 10, elbow[1] + nAvg[1] * 10])} ${P([wrist[0] + n2[0] * 2, wrist[1] + n2[1] * 2])}`);
+    // black primaries curling around the bar like fingers
+    const g = $(primId);
+    if (!g.childElementCount) for (let i = 0; i < 4; i++) el('ellipse', {}, g);
+    const base = Math.atan2(wrist[1] - elbow[1], wrist[0] - elbow[0]) * 180 / Math.PI;
+    [...g.children].forEach((f, i) => {
+      const rot = base + 20 + i * 22;
+      const r = rot * Math.PI / 180;
+      f.setAttribute('cx', (wrist[0] + Math.cos(r) * 9).toFixed(2));
+      f.setAttribute('cy', (wrist[1] + Math.sin(r) * 9).toFixed(2));
+      f.setAttribute('rx', 12 - i * 1.2);
+      f.setAttribute('ry', 3.6);
+      f.setAttribute('transform', `rotate(${rot.toFixed(1)} ${(wrist[0] + Math.cos(r) * 9).toFixed(2)} ${(wrist[1] + Math.sin(r) * 9).toFixed(2)})`);
+    });
+  }
+
+  // ---------- Frame update ----------
+  function render(dist) {
+    const wheelA = dist / WHEEL_R;                // radians
+    const th = wheelA / GEAR;                     // crank angle (clockwise)
+    const wDeg = wheelA * 180 / Math.PI;
+
+    layers.forEach(([g, f]) => {
+      const x = -((dist * f) % TILE);
+      g.setAttribute('transform', `translate(${x.toFixed(2)},0)`);
+    });
+
+    set('rearSpin', 'transform', `rotate(${wDeg.toFixed(2)} 250 360)`);
+    set('frontSpin', 'transform', `rotate(${wDeg.toFixed(2)} 530 360)`);
+    set('ring', 'transform', `rotate(${(th * 180 / Math.PI).toFixed(2)} 375 375)`);
+    set('chain', 'stroke-dashoffset', (-(th * RING_R) % 5.4).toFixed(2));
+
+    const near = [BB[0] + CRANK * Math.cos(th), BB[1] + CRANK * Math.sin(th)];
+    const far = [BB[0] - CRANK * Math.cos(th), BB[1] - CRANK * Math.sin(th)];
+    set('nearCrank', 'x1', BB[0]); set('nearCrank', 'y1', BB[1]);
+    set('nearCrank', 'x2', near[0]); set('nearCrank', 'y2', near[1]);
+    set('farCrank', 'x1', BB[0]); set('farCrank', 'y1', BB[1]);
+    set('farCrank', 'x2', far[0]); set('farCrank', 'y2', far[1]);
+    set('nearPedal', 'x', near[0] - 8.5); set('nearPedal', 'y', near[1] - 2.5);
+    set('farPedal', 'x', far[0] - 8); set('farPedal', 'y', far[1] - 2.5);
+
+    // body bob (twice per crank revolution) and a little rocking
+    const bob = 2.2 * Math.sin(2 * th);
+    const rock = 0.9 * Math.sin(th);
+    set('body', 'transform', `translate(0,${bob.toFixed(2)}) rotate(${rock.toFixed(2)} 340 222)`);
+    set('head', 'transform', `rotate(${(1.8 * Math.sin(2 * th + 0.9)).toFixed(2)} 430 140)`);
+    set('pouch', 'transform', `rotate(${(1.6 * Math.sin(2 * th + 2.1)).toFixed(2)} 458 118)`);
+
+    // transform body-local points to world (rock about 340,222, then bob)
+    const rk = rock * Math.PI / 180, cr = Math.cos(rk), sr = Math.sin(rk);
+    const W = p => {
+      const x = p[0] - 340, y = p[1] - 222;
+      return [340 + x * cr - y * sr, 222 + x * sr + y * cr + bob];
+    };
+    const hip = W(HIP);
+    leg('far', [hip[0] + 4, hip[1] - 4], far, false);
+    leg('near', hip, near, true);
+    wing('farWing', 'farPrimaries', W(SHOULDER_F), GRIP_F, null);
+    wing('nearWing', 'nearPrimaries', W(SHOULDER_N), GRIP_N, 'nearWingLine');
+  }
+
+  // ---------- Responsive framing ----------
+  const BOX = { x: 110, y: -10, w: 580, h: 490 };
+  function fit() {
+    const vw = window.innerWidth, vh = window.innerHeight, a = vw / vh;
+    let { x, y, w, h } = BOX;
+    if (a > w / h) { const nw = h * a; x -= (nw - w) / 2; w = nw; }
+    else { const nh = w / a; y -= (nh - h) * 0.55; h = nh; }
+    svg.setAttribute('viewBox', `${x.toFixed(1)} ${y.toFixed(1)} ${w.toFixed(1)} ${h.toFixed(1)}`);
+  }
+  window.addEventListener('resize', fit);
+  fit();
+
+  // ---------- Animation loop ----------
+  const SPEED = 150; // scene px per second
+  const mq = window.matchMedia ? window.matchMedia('(prefers-reduced-motion: reduce)') : null;
+  let dist = 40, last = null, raf = 0;
+  function tick(t) {
+    if (last !== null) dist += Math.min(0.05, (t - last) / 1000) * SPEED;
+    last = t;
+    render(dist);
+    raf = requestAnimationFrame(tick);
+  }
+  function start() {
+    cancelAnimationFrame(raf); last = null;
+    if (mq && mq.matches) { render(dist); return; }
+    raf = requestAnimationFrame(tick);
+  }
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) cancelAnimationFrame(raf); else start();
+  });
+  if (mq) (mq.addEventListener ? mq.addEventListener('change', start) : mq.addListener(start));
+  render(dist);
+  start();
+})();
+</script>
+</body>
+</html>
