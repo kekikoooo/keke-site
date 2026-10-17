@@ -275,7 +275,7 @@
       for (const [amp, cyc, ph] of parts) y += amp * Math.sin((x / TILE) * cyc * 2 * Math.PI + ph);
       d += ` L${x},${y.toFixed(1)}`;
     }
-    return d + ` L${TILE},460 L0,460 Z`;
+    return d + ` l1,0 L${TILE + 1},460 L0,460 Z`; // 1px overlap hides tile seams
   }
   $('farHills').setAttribute('d', hills(345, [[22, 1, .4], [12, 3, 1.7], [5, 7, .2]]));
   $('midHills').setAttribute('d', hills(400, [[14, 2, 2.1], [8, 5, .9], [3, 9, .3]]));
